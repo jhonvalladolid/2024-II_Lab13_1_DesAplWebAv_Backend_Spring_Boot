@@ -1,8 +1,7 @@
 package com.tecsup.controllers;
 
-import com.tecsup.exceptions.ResourceNotFoundException;
 import com.tecsup.models.ClienteModel;
-import com.tecsup.repositories.ClienteRepository;
+import com.tecsup.services.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,45 +13,36 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:3000/")
 @RestController
 @RequestMapping("/api/v1")
-
 public class ClienteController {
 
     @Autowired
-    private ClienteRepository clienteRepository;
+    private ClienteService clienteService;
 
     @GetMapping("/clientes")
-    public List<ClienteModel> ListarClientes(){
-        return clienteRepository.findAll();
-    }
-
-    @PostMapping("/clientes")
-    public ClienteModel guardarCliente(@RequestBody ClienteModel cliente){
-        return clienteRepository.save(cliente);
+    public List<ClienteModel> obtenerTodosLosClientes() {
+        return clienteService.obtenerTodosLosClientes();
     }
 
     @GetMapping("/clientes/{id}")
-    public ResponseEntity<ClienteModel> ListarClientePorId(@PathVariable long id){
-        ClienteModel cliente = clienteRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("El cliente no existe"+ id));
+    public ResponseEntity<ClienteModel> obtenerClientePorId(@PathVariable Long id) {
+        ClienteModel cliente = clienteService.obtenerClientePorId(id);
         return ResponseEntity.ok(cliente);
     }
 
+    @PostMapping("/clientes")
+    public ClienteModel guardarCliente(@RequestBody ClienteModel cliente) {
+        return clienteService.guardarCliente(cliente);
+    }
+
     @PutMapping("/clientes/{id}")
-    public ResponseEntity<ClienteModel> ActualizarCliente(@PathVariable long id, @RequestBody ClienteModel clienteRequest){
-        ClienteModel cliente = clienteRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("El cliente no existe"+ id));
-
-        cliente.setNombre(clienteRequest.getNombre());
-        cliente.setApellidos(clienteRequest.getApellidos());
-        cliente.setEmail(clienteRequest.getEmail());
-
-        ClienteModel clienteActualizado= clienteRepository.save(cliente);
+    public ResponseEntity<ClienteModel> actualizarCliente(@PathVariable Long id, @RequestBody ClienteModel clienteDetalles) {
+        ClienteModel clienteActualizado = clienteService.actualizarCliente(id, clienteDetalles);
         return ResponseEntity.ok(clienteActualizado);
     }
 
     @DeleteMapping("/clientes/{id}")
-    public ResponseEntity<Map<String, Boolean>> EliminarCliente(@PathVariable long id){
-        ClienteModel cliente = clienteRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("El cliente no existe"+ id));
-
-        clienteRepository.delete(cliente);
+    public ResponseEntity<Map<String, Boolean>> eliminarCliente(@PathVariable Long id) {
+        clienteService.eliminarCliente(id);
         Map<String, Boolean> response = new HashMap<>();
         response.put("eliminado", Boolean.TRUE);
         return ResponseEntity.ok(response);
